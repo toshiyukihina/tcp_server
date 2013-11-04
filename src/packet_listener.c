@@ -1,17 +1,15 @@
 #include "packet_listener.h"
 
 static void 
-PacketListener_DumpData(sse_char* in_buf, sse_int in_buflen) {
-  sse_char buf[512];
-  sse_int i, nwritten;
-  for (i = 0, nwritten = 0; i < in_buflen; i++) {
-    nwritten += sprintf(buf + nwritten, "%x", in_buf[i] & 0xff);
+TPacketListener_FireEvent(TPacketListener* self, net_ip_addr* in_addr, sse_int in_port, sse_char* in_buf, sse_int in_buflen) {
+  if (self->fCallback) {
+    (*self->fCallback)(in_addr, in_port, in_buf, in_buflen, self->fCallbackArg);
   }
-  APP_LOG_DEBUG("%s", buf);
 }
 
 sse_bool 
 TPacketListener_Initialize(TPacketListener* self) {
+  sse_memset(self, 0, sizeof(TPacketListener));
   FD_ZERO(&self->fDescs);
   return sse_true;
 }
@@ -106,10 +104,7 @@ TPacketListener_Progress(TPacketListener* self) {
 	nread = Net_TcpRead(desc, buf, sizeof(buf));
 	if (nread > 0) {
 	  Net_TcpGetRemoteAddrPort(desc, &remote_addr, &remote_port);
-	  APP_LOG_DEBUG("%d bytes data read from end-point: %d.%d.%d.%d:%d", 
-			nread, remote_addr.value[0], remote_addr.value[1], remote_addr.value[2], remote_addr.value[3], remote_port);
-	  /* You must store the received data and parse it. */
-	  PacketListener_DumpData(buf, nread);
+	  TPacketListener_FireEvent(self, &remote_addr, remote_port, buf, nread);
 	} else {
 	  if (nread != SSE_E_INPROGRESS) {
 	    APP_LOG_DEBUG("Connection closed by the client or some error occurred.");
@@ -128,4 +123,13 @@ TPacketListener_Progress(TPacketListener* self) {
 
   return SSE_E_OK;
 }
+
+sse_int 
+TPacketListener_SetPacketCallback(TPacketListener* self, PacketListener_PacketCallback in_callback, sse_pointer in_callback_arg) {
+  self->fCallback = in_callback;
+  self->fCallbackArg = in_callback_arg;
+  return SSE_E_OK;
+}
+
+
 
