@@ -23,20 +23,20 @@ make
 
 ## How to run ##
 
-### Run the TCP client. ###
-
-This TCP client send 'HELLO' message to the TCP server listening on localhost:12345 every 3 seconds.
-
-```
-ruby tcp_client.rb
-```
-
 ### Run the TCP server. ###
 
 This TCP server listens on localhost:12345 and dump data received from the TCP client.
 
 ```
 ./src/serial_sample
+```
+
+### Run the TCP client. ###
+
+This TCP client send 'HELLO' message to the TCP server listening on localhost:12345 every 3 seconds.
+
+```
+ruby tcp_client.rb
 ```
 
 You will see the debug message on the console show below:
